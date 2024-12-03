@@ -2,7 +2,7 @@ import Data.Maybe (catMaybes)
 import Text.Read (readMaybe)
 main = do
   print . solve . applyIndexes . mulIndexes =<< readFile "input"
-  print . solve . applyControl . addControl True . applyIndexes . bothIndexes =<< readFile "input"
+  print . solve . addControl True . applyIndexes . bothIndexes =<< readFile "input"
 
 
 f::([Int], [Int]) -> ([Int], [Int])
@@ -27,22 +27,19 @@ windows xs = zip xs (tail xs)
 applyIndexes::([Int], String) -> [String]
 applyIndexes (ix, s) = [substring f l s | (f,l) <- windows ix]
 
-addControl::Bool -> [String] -> [(Bool, String)]
+addControl::Bool -> [String] -> [String]
 addControl f [] = []
 addControl f (s:xs)
-  | s == "don't()" = (False, "DEACTIVATE") : addControl False xs
-  | s == "do()" = (True, "ACTIVATE") : addControl True xs
-  | otherwise = (f, s) : addControl f xs
-
-applyControl::[(Bool, String)] -> [String]
-applyControl xs = [x | (f, x) <- xs, f]
+  | s == "don't()" = addControl False xs
+  | s == "do()" = addControl True xs
+  | otherwise = if f then s:addControl f xs else addControl f xs
 
 
 parsePrefix::[String] -> [String]
 parsePrefix xs = map (drop 3) (catMaybes [parseString (startsWith "mul(") x | x <- xs])
 
 parsePostfix::[String] -> [String]
-parsePostfix xs = (catMaybes [parseString (endsWith ")") x | x <- xs])
+parsePostfix xs = catMaybes [parseString (endsWith ")") x | x <- xs]
 
 parsePair::[String] -> [Maybe (Int, Int)]
 parsePair = map readMaybe
